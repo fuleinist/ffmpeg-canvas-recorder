@@ -1,0 +1,10 @@
+// https://stackoverflow.com/questions/66489286/sharedarraybuffer-will-require-cross-origin-isolation-as-of-m91-around-may-2021
+// need to find a walk around here to load videos from s3
+
+// module.exports = function (app) {
+//   app.use(function (req, res, next) {
+//       res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+//       res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+//       next();
+//   });
+// };
