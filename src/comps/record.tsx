@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
 import { createFFmpeg } from "@ffmpeg/ffmpeg";
 
+import { uploadToS3 } from "../utils/uploadToS3"
+
 //https://stackoverflow.com/a/62865574/7080032
 const ffmpeg = createFFmpeg({corePath: "https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js", log: true});
 
@@ -12,7 +14,7 @@ export const useVideoRecorder = () => {
 
   const transcode = async (webcamData: Uint8Array) => {
     const dl = document.getElementById("download") as HTMLLinkElement;
-    console.log("Start transcoding");
+    console.log("Start transcoding", webcamData.length);
     ffmpeg.FS(
       "writeFile",
       "output.mp4",
@@ -20,15 +22,20 @@ export const useVideoRecorder = () => {
     );
     console.log("Complete transcoding");
     const data = ffmpeg.FS("readFile", "output.mp4");
+    console.log('videoData', data.length)
 
     const video = document.getElementById("output-video") as HTMLVideoElement;
     const blob = new Blob([data.buffer], { type: "video/mp4" })
+    console.log('videoBlob', blob.size)
+
     video.src = URL.createObjectURL(blob);
     dl.href = video.src;
-    dl.innerHTML = "download mp4";
+    const file = new File([blob], `upload.mp4`, { type: 'video/mp4' });
+    console.log('videoFile', [file.name, file.type, file.size])
+
     return {
-      blob,
-      src: video.src
+      src: video.src,
+      file
     };
   };
 
@@ -57,7 +64,7 @@ export const useVideoRecorder = () => {
           myVideo.src = url;
           // // removed data url conversion for brevity
         } catch (e) {
-          console.log(e);
+          console.error(e);
           rej(e);
         }
       };
@@ -78,14 +85,23 @@ export const useVideoRecorder = () => {
     record(canvas, document.getElementById("myVideo") as HTMLVideoElement).then(
       async ({ url, blob }) => {
         const result = await transcode(new Uint8Array(await blob.arrayBuffer()));
+        const event = new CustomEvent('videoRecordComplete', { detail: result.file.size });
+        document.dispatchEvent(event);
         setDownloadReady(true);
         setRecording(false);
-        const event = new CustomEvent('videoRecordComplete', { detail: result });
-        document.dispatchEvent(event);
-        
-      }
-    );
-  };
+        // Handle upload to S3 and then emit event to update chrominum
+        const uploadUrl = window.videoUploadUrl
+        if(uploadUrl) {
+          console.log('start uploading', JSON.stringify([result.file.type, result.file.name, result.file.size]));
+          uploadToS3(result.file, uploadUrl).then((res) => {
+            const event = new CustomEvent('videoUploaded', { detail: res?.status });
+            document.dispatchEvent(event);
+          });
+        } else {
+          console.error('no videoUploadUrl from chrominum');
+        }
+      });
+    };
   return {
     startRecord,
     recording,

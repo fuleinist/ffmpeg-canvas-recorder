@@ -4,15 +4,14 @@ import { Stage, Layer } from "react-konva";
 import { useMyVideo, TransactionType } from "./comps/video";
 import { useVideoRecorder } from "./comps/record";
 
+declare global {
+  interface Window {
+    canvasPlayerConfig?: { url: string, srcs: string[] };
+    videoUploadUrl?: string
+  }
+}
+
 const App = () => {
-
-  // useEffect(() => {
-  //   //@ts-ignore
-  //   document.addEventListener("pageLoaded", function(e) { console.log(e.detail) });
-  //    //@ts-ignore
-  //   document.addEventListener("videoRecordComplete", function(e) { console.log(e.detail) });
-  // }, []);
-
   const { myVideo, setTransaction, loaded, switching, ended } = useMyVideo({
     loop: false
   });
@@ -29,13 +28,12 @@ const App = () => {
       startRecord();
     }
     if (ended && recording) {
-      console.log(recorder)
       recorder?.stop();
     }
   }, [loaded, ended, recorder]);
 
   useEffect(() => {
-    const event = new CustomEvent('pageLoaded', { detail: {date: Date.now() } });
+    const event = new CustomEvent('pageLoaded', { detail: { date: Date.now() } });
     document.dispatchEvent(event);
   }, []);
 

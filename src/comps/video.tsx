@@ -8,7 +8,7 @@ const mockSrcs = [
   "https://temp-ligr-assets.s3.amazonaws.com/1/mediaVideo/1/1639541876462.yt5s.com_Pilot_TVC_June_2020_1080p.mp4/mp4/video_std.mp4"
 ];
 
-// const srcs = [
+// const mockSrcs = [
 //   "/videos/video1.mp4",
 //   "/videos/video2.mp4",
 // ];
@@ -25,7 +25,7 @@ const transValue = (type: TransactionType, { revert, isEven }: { revert?: boolea
     swipe: {
       opacity: r ? 1 : 0,
       x: r ? 0 : -640,
-      duration: 1
+      duration: 1   
     },
     drop: {
       opacity: r ? 1 : 0,
@@ -97,12 +97,10 @@ export const useVideoPlay = (srcs: string[], { loop }: { loop: boolean }) => {
       }
       if(vidEle1Ref.current) {
         //play video 1
-        console.log(vidEle1Ref.current);
         vidEle1Ref.current.play();
       }
     } else if (!isEven) {
       if(vidEle2Ref.current) {
-        console.log(vidEle2Ref.current);
         vidEle2Ref.current.play();
       }
       if(vidEle1Ref.current && srcs[idx + 1]) {
@@ -110,7 +108,6 @@ export const useVideoPlay = (srcs: string[], { loop }: { loop: boolean }) => {
         vidEle1Ref.current.getElementsByTagName('source')[0].setAttribute('src', srcs[idx + 1]);
         vidEle1Ref.current.load();
       }
-      console.log({isEven, idx})
     }
   }, [idx])
 
